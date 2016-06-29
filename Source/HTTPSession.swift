@@ -27,21 +27,23 @@ public class HTTPSession {
 
 		operationQueue = NSOperationQueue()
 		operationQueue.maxConcurrentOperationCount = 1
-	}
+    }
 
-	public func lights(selector: String = "all", completionHandler: ((request: NSURLRequest, response: NSURLResponse?, lights: [Light], error: NSError?) -> Void)) {
-		let request = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent("lights/\(selector)"))
-		request.HTTPMethod = "GET"
-		addOperationWithRequest(request) { (data, response, error) in
-			if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200]) {
-				completionHandler(request: request, response: response, lights: [], error: error)
-			} else {
-				let (lights, error) = self.dataToLights(data)
-				completionHandler(request: request, response: response, lights: lights, error: error)
-			}
-		}
-	}
-
+    public func lights(selector: String = "all", completionHandler: ((request: NSURLRequest, response: NSURLResponse?, lights: [Light], error: NSError?) -> Void)) {
+        if let lightsURL = baseURL.URLByAppendingPathComponent("lights/\(selector)") {
+            let request = NSMutableURLRequest(URL: lightsURL)
+            request.HTTPMethod = "GET"
+            addOperationWithRequest(request) { (data, response, error) in
+                if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200]) {
+                    completionHandler(request: request, response: response, lights: [], error: error)
+                } else {
+                    let (lights, error) = self.dataToLights(data)
+                    completionHandler(request: request, response: response, lights: lights, error: error)
+                }
+            }
+        }
+    }
+    
 	public func setLightsPower(selector: String, power: Bool, duration: Float, completionHandler: ((request: NSURLRequest, response: NSURLResponse?, results: [Result], error: NSError?) -> Void)) {
 		print("`setLightsPower:power:duration:completionHandler:` is deprecated and will be removed in a future version. Use `setLightsState:power:color:brightness:duration:completionHandler:` instead.")
 		setLightsState(selector, power: power, duration: duration, completionHandler: completionHandler)
@@ -52,62 +54,68 @@ public class HTTPSession {
 		setLightsState(selector, color: color, power: powerOn, duration: duration, completionHandler: completionHandler)
 	}
 
-	public func setLightsState(selector: String, power: Bool? = nil, color: String? = nil, brightness: Double? = nil, duration: Float, completionHandler: ((request: NSURLRequest, response: NSURLResponse?, results: [Result], error: NSError?) -> Void)) {
-		let request = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent("lights/\(selector)/state"))
-		var parameters: [String : AnyObject] = ["duration": duration]
-		if let power = power {
-			parameters["power"] = power ? "on" : "off"
-		}
-		if let color = color {
-			parameters["color"] = color
-		}
-		if let brightness = brightness {
-			parameters["brightness"] = brightness
-		}
-		request.HTTPMethod = "PUT"
-		request.HTTPBody = try? NSJSONSerialization.dataWithJSONObject(parameters, options: [])
-		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-		addOperationWithRequest(request) { (data, response, error) in
-			if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200, 207]) {
-				completionHandler(request: request, response: response, results: [], error: error)
-			} else {
-				let (results, error) = self.dataToResults(data)
-				completionHandler(request: request, response: response, results: results, error: error)
-			}
-		}
-	}
+    public func setLightsState(selector: String, power: Bool? = nil, color: String? = nil, brightness: Double? = nil, duration: Float, completionHandler: ((request: NSURLRequest, response: NSURLResponse?, results: [Result], error: NSError?) -> Void)) {
+        if let setLightsURL = baseURL.URLByAppendingPathComponent("lights/\(selector)/state") {
+            let request = NSMutableURLRequest(URL: setLightsURL)
+            var parameters: [String : AnyObject] = ["duration": duration]
+            if let power = power {
+                parameters["power"] = power ? "on" : "off"
+            }
+            if let color = color {
+                parameters["color"] = color
+            }
+            if let brightness = brightness {
+                parameters["brightness"] = brightness
+            }
+            request.HTTPMethod = "PUT"
+            request.HTTPBody = try? NSJSONSerialization.dataWithJSONObject(parameters, options: [])
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            addOperationWithRequest(request) { (data, response, error) in
+                if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200, 207]) {
+                    completionHandler(request: request, response: response, results: [], error: error)
+                } else {
+                    let (results, error) = self.dataToResults(data)
+                    completionHandler(request: request, response: response, results: results, error: error)
+                }
+            }
+        }
+    }
 
-	public func scenes(completionHandler: ((request: NSURLRequest, response: NSURLResponse?, scenes: [Scene], error: NSError?) -> Void)) {
-		let request = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent("scenes"))
-		request.HTTPMethod = "GET"
-		addOperationWithRequest(request) { (data, response, error) in
-			if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200]) {
-				completionHandler(request: request, response: response, scenes: [], error: error)
-			} else {
-				let (scenes, error) = self.dataToScenes(data)
-				completionHandler(request: request, response: response, scenes: scenes, error: error)
-			}
-		}
-	}
+    public func scenes(completionHandler: ((request: NSURLRequest, response: NSURLResponse?, scenes: [Scene], error: NSError?) -> Void)) {
+        if let scenesURL = baseURL.URLByAppendingPathComponent("scenes") {
+            let request = NSMutableURLRequest(URL: scenesURL)
+            request.HTTPMethod = "GET"
+            addOperationWithRequest(request) { (data, response, error) in
+                if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200]) {
+                    completionHandler(request: request, response: response, scenes: [], error: error)
+                } else {
+                    let (scenes, error) = self.dataToScenes(data)
+                    completionHandler(request: request, response: response, scenes: scenes, error: error)
+                }
+            }
+        }
+    }
 
-	public func setScenesActivate(selector: String, duration: Float, completionHandler: ((request: NSURLRequest, response: NSURLResponse?, results: [Result], error: NSError?) -> Void)) {
-		let request = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent("scenes/\(selector)/activate"))
-		let parameters = ["duration", duration]
-		request.HTTPMethod = "PUT"
-		request.HTTPBody = try? NSJSONSerialization.dataWithJSONObject(parameters, options: [])
-		addOperationWithRequest(request) { (data, response, error) in
-			if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200, 207]) {
-				completionHandler(request: request, response: response, results: [], error: error)
-			} else {
-				let (results, error) = self.dataToResults(data)
-				completionHandler(request: request, response: response, results: results, error: error)
-			}
-		}
-	}
-
-	// MARK: Helpers
-
-	private func addOperationWithRequest(request: NSURLRequest, completionHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
+    public func setScenesActivate(selector: String, duration: Float, completionHandler: ((request: NSURLRequest, response: NSURLResponse?, results: [Result], error: NSError?) -> Void)) {
+        if let setScenesActivateURL = baseURL.URLByAppendingPathComponent("scenes/\(selector)/activate") {
+            let request = NSMutableURLRequest(URL: setScenesActivateURL)
+            let parameters = ["duration", duration]
+            request.HTTPMethod = "PUT"
+            request.HTTPBody = try? NSJSONSerialization.dataWithJSONObject(parameters, options: [])
+            addOperationWithRequest(request) { (data, response, error) in
+                if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200, 207]) {
+                    completionHandler(request: request, response: response, results: [], error: error)
+                } else {
+                    let (results, error) = self.dataToResults(data)
+                    completionHandler(request: request, response: response, results: results, error: error)
+                }
+            }
+        }
+    }
+    
+    // MARK: Helpers
+    
+    private func addOperationWithRequest(request: NSURLRequest, completionHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
 		let operation = HTTPOperation(URLSession: URLSession, delegateQueue: delegateQueue, request: request, completionHandler: completionHandler)
 		operationQueue.operations.first?.addDependency(operation)
 		operationQueue.addOperation(operation)
