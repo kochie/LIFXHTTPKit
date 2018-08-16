@@ -50,7 +50,7 @@ Toggle power on one light.
 
 ``` swift
 if let lightTarget = all.toLightTargets().first() {
-  lightTarget.setPower(!lightTarget.power)
+  lightTarget.togglePower()
 }
 ```
 

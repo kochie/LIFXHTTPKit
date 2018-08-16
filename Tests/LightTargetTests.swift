@@ -101,4 +101,13 @@ class LightTargetTests: XCTestCase {
 	func testLightTargetTouchedAt() {
 		XCTAssertEqualWithAccuracy(lightTarget.touchedAt.timeIntervalSinceNow, Date().timeIntervalSinceNow, accuracy: 10.0)
 	}
+    
+    func testTogglePower() {
+        let expectation = self.expectation(description: "togglePower")
+        lightTarget.togglePower { (error) in
+            XCTAssertNil(error)
+            expectation.fulfill()
+        }
+        waitForExpectations(timeout: 3.0, handler: nil)
+    }
 }

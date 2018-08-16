@@ -76,6 +76,23 @@ public class HTTPSession {
 			}
 		}
 	}
+    
+    public func togglePower(_ selector: String, duration: Float, completionHandler: @escaping ((_ request: URLRequest, _ response: URLResponse?, _ results: [Result], _ error: Error?) -> Void)) {
+        var request = URLRequest(url: baseURL.appendingPathComponent("lights/\(selector)/toggle"))
+        let parameters: [String : Any] = ["duration": duration as AnyObject]
+        
+        request.httpMethod = "POST"
+        request.httpBody = try? JSONSerialization.data(withJSONObject: parameters, options: [])
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        addOperationWithRequest(request as URLRequest) { (data, response, error) in
+            if let error = error ?? self.validateResponseWithExpectedStatusCodes(response, statusCodes: [200, 207]) {
+                completionHandler(request as URLRequest, response, [], error)
+            } else {
+                let (results, error) = self.dataToResults(data)
+                completionHandler(request, response, results, error)
+            }
+        }
+    }
 	
 	public func scenes(_ completionHandler: @escaping ((_ request: URLRequest, _ response: URLResponse?, _ scenes: [Scene], _ error: Error?) -> Void)) {
 		var request = URLRequest(url: baseURL.appendingPathComponent("scenes"))

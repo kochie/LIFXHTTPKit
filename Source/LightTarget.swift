@@ -227,6 +227,21 @@ public class LightTarget {
 			completionHandler?(results, error)
 		}
 	}
+    
+    public func togglePower(_ duration: Float = LightTarget.defaultDuration, completionHandler: ((_ error: Error?) -> Void)? = nil) {
+        let oldPower = self.power
+        client.updateLights(lights.map({ $0.lightWithProperties(!oldPower) }))
+        client.session.togglePower(selector.toQueryStringValue(), duration: duration) { [weak self] (_, _, results, error) in
+            completionHandler?(error)
+            if let strongSelf = self {
+                var newLights = strongSelf.lightsByDeterminingConnectivityWithResults(strongSelf.lights, results: results)
+                if error != nil {
+                    newLights = newLights.map({ $0.lightWithProperties(oldPower) })
+                }
+                strongSelf.client.updateLights(newLights)
+            }
+        }
+    }
 	
 	// MARK: Helpers
 	
